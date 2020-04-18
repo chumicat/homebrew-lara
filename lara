@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-version=1.1.11
+test $(uname) == 'Darwin' && brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
+test $(uname) == 'Linux' && brewPath=/home/linuxbrew/.linuxbrew/Library/Taps/chumicat/homebrew-lara
 projectPath=$PWD
 projectName=$(basename $PWD)
 gitEmail=$(git config user.email)
@@ -9,45 +10,62 @@ siteDomain=laravel.test
 
 case "$1" in
     # # ===== LARA DEVLOPER COMMAND ===== #
-    # lara db:create                # Create table t0 in lara.db
+    # lara db:create                # Locally, CREATE table t0 in lara.db
     db:create)
         echo "CREATE TABLE t0(key TEXT, value TEXT);" | sqlite3 lara.db
         ;;
-    # lara db:select                # Select value that match key from t0
+    # lara db:select                # Locally, SELECT value with key in t0
     db:select)
         test -z $2 && echo "SELECT * FROM t0" | sqlite3 lara.db
         echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 lara.db
         ;;
-    # lara db:insert                # Insert key-value pair in t0
+    # lara db:insert                # Locally, INSERT item(key-value) in t0
     db:insert)
         echo "INSERT INTO t0('key', 'value') VALUES('$2', '$3')" | sqlite3 lara.db
         ;;
-    # lara db:delete                # 
+    # lara db:delete                # Locally, DELETE item with key in t0
     db:delete)
         echo "DELETE FROM t0 WHERE key='$2'" | sqlite3 lara.db
         ;;
-    # lara db:update                # 
+    # lara db:update                # Locally, UPDATE item with key in t0
     db:update)
         echo "UPDATE t0 SET value='$3' WHERE key='$2'" | sqlite3 lara.db
         ;;
+    # lara db:mix                   # Locally, SELECT/INSERT/UPDATE on situation, use as set
     db:mix)
         test -z $3 && lara db:select $2 && exit
         val=$(lara db:select $2)
         test -z $val && lara db:insert $2 $3 && exit
         lara db:update $2 $3 && exit
         ;;
-    # lara db:select                # 
+    # lara db:++                    # Locally, Increase value with key in t0
+    db:++)
+        value=$(lara db:select $2)
+        let "value++"
+        lara db:mix $2 $value
+        ;;
+    # lara db:global                # Globally, SELECT global data, read only
+    db:global)
+        test -z $2 && echo "SELECT * FROM t0" | sqlite3 $brewPath/lara.db
+        echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 $brewPath/lara.db
+        ;;
 
     # lara lara:release             # Generate README.md
     lara:readme)
-        cp lara.sh lara
+        cp README.pre.md README.md
+        printf '\n```shell\n' >> README.md
+        bash lara list >> README.md
+        printf '\n```' >> README.md
         ;;
     # lara lara:release             # Do trivia and release lara
     lara:release)
-        cp lara.sh lara && chmod a+rx lara
-        echo $version
-        v=$(grep -E "version=.*\..*" lara.sh | sed -e "s/version=.*\.//g")
-        grep -E "version=.*\..*" lara.sh
+        bash lara lara:readme
+        bash lara db:++ V2
+        echo "LARA $version $(lara db:mix V0).$(lara db:mix V1).$(lara db:mix V2) RELEASE"
+        git add .
+        test -z $2 && 2="auto update / fast update"
+        git commit -m "$2"
+        git push 
         ;;
 
     # # ===== LARA GENERAL COMMAND ===== #
@@ -58,15 +76,13 @@ case "$1" in
     # lara status                   # Check HEAD
     # lara version                  # Show script version
     version)
-        echo "LARA $version"
+        echo "LARA $version $(lara db:global V0).$(lara db:global V1).$(lara db:global V2)"
         echo "Copyright (c) Chumicat"
         ;;
     # lara setenv                   # Check and Set environment
     setenv)
         bashPath=~/.bashrc
         fishPath=~/.config/fish/config.fish
-        test $(uname) == 'Darwin' && brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
-        test $(uname) == 'Linux' && brewPath=/home/linuxbrew/.linuxbrew/Library/Taps/chumicat/homebrew-lara
         grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
         grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
         echo -e "\e[32mSet Environment Finish\e[0m"
