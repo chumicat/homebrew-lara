@@ -38,17 +38,11 @@ case "$1" in
         test -z $val && lara db:insert $2 $3 && exit
         lara db:update $2 $3 && exit
         ;;
-    # lara db:++                    # Locally, Increase value with key in t0
-    db:++)
-        value=$(lara db:select $2)
-        let "value++"
-        lara db:mix $2 $value
-        ;;
-    # lara db:--                    # Locally, Increase value with key in t0
-    db:--)
-        value=$(lara db:select $2)
-        let "value--"
-        lara db:mix $2 $value
+    # lara db:++                    # Locally, Do operation on value with key in t0
+    db:)
+        value=$(lara db:select $3)
+        let "value$2"
+        lara db:mix $3 $value
         ;;
     # lara db:global                # Globally, SELECT global data, read only
     db:global)
@@ -66,7 +60,7 @@ case "$1" in
     # lara lara:release             # Do trivia and release lara
     lara:release)
         bash lara lara:readme
-        bash lara db:++ V2
+        bash lara db: ++ V2
         echo "LARA $version $(lara db:select V0).$(lara db:select V1).$(lara db:select V2) RELEASE"
         git add .
         msg=$2 && test -z $msg && msg="auto update / fast update"
