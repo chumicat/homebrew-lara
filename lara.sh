@@ -23,15 +23,11 @@ case "$1" in
     setenv)
         bashPath=~/.bashrc
         fishPath=~/.config/fish/config.fish
-        brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
+        test $(uname) == 'Darwin' && brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
+        test $(uname) == 'Linux' && brewPath=/home/linuxbrew/.linuxbrew/Library/Taps/chumicat/homebrew-lara
         grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
         grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
         echo -e "\e[32mSet Environment Finish\e[0m"
-        ;;
-    # lara update|reinstall         # Update lara script
-    update | reinstall)
-        curl https://raw.githubusercontent.com/chumicat/lara/master/laraInstall.sh --output laraInstall.sh && bash laraInstall.sh
-        lara version
         ;;
     # lara remove                   # Remove lara script
     remove)
