@@ -63,8 +63,7 @@ case "$1" in
         bash lara db: ++ V2
         echo "LARA $version $(lara db:select V0).$(lara db:select V1).$(lara db:select V2) RELEASE"
         git add .
-        msg=$2 
-        test -z $msg && msg="auto update / fast update"
+        msg=$2 && test -z $msg && msg="auto update / fast update"
         git commit -m "$msg"
         git push 
         brew update
