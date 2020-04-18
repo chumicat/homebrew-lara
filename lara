@@ -73,6 +73,7 @@ case "$1" in
         git commit -m "$msg"
         git push 
         brew update
+        lara version
         ;;
 
     # # ===== LARA GENERAL COMMAND ===== #
