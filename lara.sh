@@ -1,5 +1,5 @@
 #!/bin/bash
-version=1.1.6
+version=1.1.7
 projectPath=$PWD
 projectName=$(basename $PWD)
 gitEmail=$(git config user.email)
@@ -21,9 +21,9 @@ case "$1" in
         ;;
     # lara setenv)                  # Check and Set environment
     setenv)
-        bashPath='~/.bashrc'
-        fishPath='~/.config/fish/config.fish'
-        brewPath='/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara'
+        bashPath=~/.bashrc
+        fishPath=~/.config/fish/config.fish
+        brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
         grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
         grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
         echo -e "\e[32mSet Environment Finish\e[0m"
