@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-version=1.1.8
+version=1.1.9
 projectPath=$PWD
 projectName=$(basename $PWD)
 gitEmail=$(git config user.email)
@@ -8,6 +8,49 @@ gitUrl=git@github.com:$gitName/$projectName.git
 siteDomain=laravel.test
 
 case "$1" in
+    # # ===== LARA DEVLOPER COMMAND ===== #
+    # lara db:create                # Create table t0 in lara.db
+    db:create)
+        echo "CREATE TABLE t0(key TEXT, value TEXT);" | sqlite3 lara.db
+        ;;
+    # lara db:select                # Select value that match key from t0
+    db:select)
+        test -z $2 && echo "SELECT * FROM t0" | sqlite3 lara.db
+        echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 lara.db
+        ;;
+    # lara db:insert                # Insert key-value pair in t0
+    db:insert)
+        echo "INSERT INTO t0('key', 'value') VALUES('$2', '$3')" | sqlite3 lara.db
+        ;;
+    # lara db:delete                # 
+    db:delete)
+        echo "DELETE FROM t0 WHERE key='$2'" | sqlite3 lara.db
+        ;;
+    # lara db:update                # 
+    db:update)
+        echo "UPDATE t0 SET value='$3' WHERE key='$2'" | sqlite3 lara.db
+        ;;
+    db:mix)
+        test -z $2 && echo "SELECT * FROM t0" | sqlite3 lara.db
+        test -z $3 && echo "DELETE FROM t0 WHERE key='$2'" | sqlite3 lara.db && exit
+        val=$(echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 lara.db)
+        test -z $val && echo "INSERT INTO t0('key', 'value') VALUES('$2', '$3')" | sqlite3 lara.db && exit
+        echo "UPDATE t0 SET value='$3' WHERE key='$2'" | sqlite3 lara.db && exit
+        ;;
+    # lara db:select                # 
+
+    # lara lara:release             # Generate README.md
+    lara:readme)
+        cp lara.sh lara
+        ;;
+    # lara lara:release             # Do trivia and release lara
+    lara:release)
+        cp lara.sh lara && chmod a+rx lara
+        echo $version
+        v=$(grep -E "version=.*\..*" lara.sh | sed -e "s/version=.*\.//g")
+        grep -E "version=.*\..*" lara.sh
+        ;;
+
     # # ===== LARA GENERAL COMMAND ===== #
     # lara list                     # List all command
     list) # list all command
@@ -19,7 +62,7 @@ case "$1" in
         echo "LARA $version"
         echo "Copyright (c) Chumicat"
         ;;
-    # lara setenv)                  # Check and Set environment
+    # lara setenv                   # Check and Set environment
     setenv)
         bashPath=~/.bashrc
         fishPath=~/.config/fish/config.fish
@@ -29,22 +72,27 @@ case "$1" in
         grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
         echo -e "\e[32mSet Environment Finish\e[0m"
         ;;
-    # lara remove                   # Remove lara script
-    remove)
-        sudo rm -rf ~/opt/lara ~/.config/fish/functions/lara.fish ~/.config/fish/scripts/lara
-        ;;
 
     # # ===== PROJECT CONTROL COMMAND ===== #
-    # lara new <projName>           # New a laravel project
-    # lara init <projName>          # Initial a laravelproject after clone
-    # lara switch <projName>        # Switch HEAD to project
-    # lara distribute <projName>    # Add "automatic initial script" to project
+    # lara new <domain> [-dg]       # New a laravel project
+    # lara init <domain> [-d]       # Initial a laravelproject after clone
+    # lara switch <domain>          # Switch HEAD to project
+    # lara release <domain>         # Generate initial script to project
 
-    # # ===== IN PROJECT COMMAND ===== #
-    # lara up                       # Up HEAD project
+    # # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
+    # lara up [-der]                # Up HEAD project
     # lara down                     # down HEAD project
     # lara restart                  # restart HEAD project
-    # lara downup                   # downup HEAD project
+    # lara downup [-der]            # downup HEAD project
+    # lara enter [-r]               # enter HEAD project workspace
+    # lara site                     # open HEAD project site and document
+    # lara site api                 # open HEAD project swagger API document
+
+    # # ===== IN PROJECT COMMAND (IN DOCKER) ===== #
+    # lara require ...              # require package to HEAD project
+    # lara require swagger
+    # lara require npm|sasslara
+    # lara require *                # general command as run in HEAD project
 
 
 
