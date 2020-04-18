@@ -26,6 +26,7 @@ case "$1" in
         brewPath='/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara'
         grep -q brewPath fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
         grep -q brewPath bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
+        echo -e "\e[32mSet Environment Finish\e[0m"
         ;;
     # lara update|reinstall         # Update lara script
     update | reinstall)
