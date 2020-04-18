@@ -44,6 +44,12 @@ case "$1" in
         let "value++"
         lara db:mix $2 $value
         ;;
+    # lara db:--                    # Locally, Increase value with key in t0
+    db:--)
+        value=$(lara db:select $2)
+        let "value--"
+        lara db:mix $2 $value
+        ;;
     # lara db:global                # Globally, SELECT global data, read only
     db:global)
         test -z $2 && echo "SELECT * FROM t0" | sqlite3 $brewPath/lara.db
@@ -63,9 +69,10 @@ case "$1" in
         bash lara db:++ V2
         echo "LARA $version $(lara db:mix V0).$(lara db:mix V1).$(lara db:mix V2) RELEASE"
         git add .
-        test -z $2 && 2="auto update / fast update"
-        git commit -m "$2"
+        msg=$2 && test -z $msg && msg="auto update / fast update"
+        git commit -m "$msg"
         git push 
+        brew update
         ;;
 
     # # ===== LARA GENERAL COMMAND ===== #
