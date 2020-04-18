@@ -8,7 +8,7 @@ lara db:select                # Locally, SELECT value with key in t0
 lara db:insert                # Locally, INSERT item(key-value) in t0
 lara db:delete                # Locally, DELETE item with key in t0
 lara db:update                # Locally, UPDATE item with key in t0
-lara db:mix                   # Locally, SELECT/INSERT/UPDATE on situation, use as set
+lara db:mix                   # Locally, INSERT/DELETE/UPDATE on situation, use as set
 lara db:++                    # Locally, Increase value with key in t0
 lara db:--                    # Locally, Increase value with key in t0
 lara db:global                # Globally, SELECT global data, read only

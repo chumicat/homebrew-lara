@@ -31,9 +31,9 @@ case "$1" in
     db:update)
         echo "UPDATE t0 SET value='$3' WHERE key='$2'" | sqlite3 lara.db
         ;;
-    # lara db:mix                   # Locally, SELECT/INSERT/UPDATE on situation, use as set
+    # lara db:mix                   # Locally, INSERT/DELETE/UPDATE on situation, use as set
     db:mix)
-        test -z $3 && lara db:select $2 && exit
+        test -z $3 && lara db:delete $2 && exit
         val=$(lara db:select $2)
         test -z $val && lara db:insert $2 $3 && exit
         lara db:update $2 $3 && exit
@@ -67,7 +67,7 @@ case "$1" in
     lara:release)
         bash lara lara:readme
         bash lara db:++ V2
-        echo "LARA $version $(lara db:mix V0).$(lara db:mix V1).$(lara db:mix V2) RELEASE"
+        echo "LARA $version $(lara db:select V0).$(lara db:select V1).$(lara db:select V2) RELEASE"
         git add .
         msg=$2 && test -z $msg && msg="auto update / fast update"
         git commit -m "$msg"
