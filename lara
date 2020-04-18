@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-version=1.1.10
+version=1.1.11
 projectPath=$PWD
 projectName=$(basename $PWD)
 gitEmail=$(git config user.email)
@@ -31,8 +31,7 @@ case "$1" in
         echo "UPDATE t0 SET value='$3' WHERE key='$2'" | sqlite3 lara.db
         ;;
     db:mix)
-        test -z $2 && lara db:select && exit
-        test -z $3 && lara db:delete $2 && exit
+        test -z $3 && lara db:select $2 && exit
         val=$(lara db:select $2)
         test -z $val && lara db:insert $2 $3 && exit
         lara db:update $2 $3 && exit
