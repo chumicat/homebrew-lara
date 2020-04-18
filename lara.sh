@@ -1,5 +1,5 @@
-#!/bin/bash
-version=1.1.7
+#!/usr/bin/env bash
+version=1.1.8
 projectPath=$PWD
 projectName=$(basename $PWD)
 gitEmail=$(git config user.email)
