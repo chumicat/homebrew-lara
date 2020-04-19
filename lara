@@ -91,12 +91,14 @@ case "$1" in
         ;;
     # lara                          # List all domain
     domain:list)
+        printf "\e[33m"
         ls -d *.*/ | sed -e "s/\///"
+        printf "\e[0m"
         ;;
     # lara status                   # Check HEAD
     status)
         HEAD=$(lara db:where HEAD)
-        test -z $HEAD && printf "\e[31mＹou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below" && lara domain:list && exit
+        test -z $HEAD && printf "\e[31mＹou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below:\n" && lara domain:list && exit
         echo you are on $HEAD project
         ;;
     # lara version                  # Show script version
