@@ -123,6 +123,7 @@ case "$1" in
     # lara switch <domain>          # Switch HEAD to project
     switch)
         declare -a domainList=($($0 domain:list | grep $2))
+        test ${#domainList[@]} -ne 0 && echo -e "\e[31mDomain not exist!!\e[0m" && exit
         test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && exit
         $0 db:mix HEAD ${domainList[0]}
         $0 status
