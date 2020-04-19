@@ -56,24 +56,16 @@ case "$1" in
         test -z $2 && echo "SELECT * FROM t0" | sqlite3 $brewPath/lara.db
         echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 $brewPath/lara.db
         ;;
-    # lara lara:setenv              # Check and Set environment
-    lara:setenv)
-        bashPath=~/.bashrc
-        fishPath=~/.config/fish/config.fish
-        grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
-        grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
-        echo -e "\e[32mSet Environment Finish\e[0m"
-        ;;
-    # lara lara:readme              # Generate README.md
-    lara:readme)
+    # lara dev:readme               # Generate README.md
+    dev:readme)
         cp README.pre.md README.md
         printf '\n```shell\n' >> README.md
         bash lara list >> README.md
         printf '\n```' >> README.md
         ;;
-    # lara lara:release             # Do trivia and release lara
-    lara:release)
-        bash lara lara:readme
+    # lara dev:release              # Do trivia and release lara
+    dev:release)
+        bash lara dev:readme
         bash lara db: ++ V2
         echo "LARA $version $(lara db:where V0).$(lara db:where V1).$(lara db:where V2) RELEASE"
         git add .
@@ -83,13 +75,33 @@ case "$1" in
         brew update
         lara version
         ;;
-
+    # 
+    # # ===== LARA ENVIRONMENT COMMAND ===== #
+    # lara lara:setenv              # Check and Set environment
+    lara:setenv)
+        bashPath=~/.bashrc
+        fishPath=~/.config/fish/config.fish
+        grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
+        grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
+        echo -e "\e[32mSet Environment Finish\e[0m"
+        ;;
+    # lara lara:setdir              # Set lara working directory for all laravel peoject
+    lara:setdir)
+        lara db:create
+        git clone https://github.com/laradock/laradock.git
+        test -r laradock/.env || cp laradock/env-example laradock/.env
+        ;;
+    # lara lara:unsetdir            # Remove laradock and db of lara working directory 
+    lara:unsetdir)
+        rm -rf lara.db laradock
+        ;;
+    # 
     # # ===== LARA GENERAL COMMAND ===== #
     # lara list                     # List all command
     list)
         grep -E "^(    # )" $0 | sed -e 's/    # //'
         ;;
-    # lara                          # List all domain
+    # lara domain:lara              # List all domain
     domain:list)
         printf "\e[33m"
         ls -d *.*/ | sed -e "s/\///"
@@ -98,22 +110,21 @@ case "$1" in
     # lara status                   # Check HEAD
     status)
         HEAD=$(lara db:where HEAD)
-        test -z $HEAD && printf "\e[31mＹou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below:\n" && lara domain:list && exit
-        echo you are on $HEAD project
+        test -z $HEAD && printf "\e[31mYou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below:\n" && lara domain:list && exit
+        echo -e "you are on \e[33m$HEAD\e[0m project"
         ;;
     # lara version                  # Show script version
     version)
         echo "LARA $version $(lara db:global V0).$(lara db:global V1).$(lara db:global V2)"
         echo "Copyright (c) Chumicat"
         ;;
-
-
+    # 
     # # ===== PROJECT CONTROL COMMAND ===== #
     # lara new <domain> [-dg]       # New a laravel project
     # lara init <domain> [-d]       # Initial a laravelproject after clone
     # lara switch <domain>          # Switch HEAD to project
     # lara release <domain>         # Generate initial script to project
-
+    # 
     # # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
     # lara up [-der]                # Up HEAD project
     # lara down                     # down HEAD project
@@ -122,7 +133,7 @@ case "$1" in
     # lara enter [-r]               # enter HEAD project workspace
     # lara site                     # open HEAD project site and document
     # lara site api                 # open HEAD project swagger API document
-
+    # 
     # # ===== IN PROJECT COMMAND (IN DOCKER) ===== #
     # lara require ...              # require package to HEAD project
     # lara require swagger
