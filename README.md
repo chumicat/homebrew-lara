@@ -28,11 +28,11 @@ lara version                  # Show script version
 
 # ===== PROJECT CONTROL COMMAND ===== #
 lara new <domain> [-dg]       # New a laravel project
-lara init <domain> [-d]       # Initial a laravelproject after clone
 lara switch <domain>          # Switch HEAD to project
 lara release <domain>         # Generate initial script to project
 
 # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
+lara init [-d]                # Initial a laravelproject after clone
 lara up [-der]                # Up HEAD project
 lara down                     # down HEAD project
 lara restart                  # restart HEAD project

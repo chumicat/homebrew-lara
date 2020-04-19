@@ -9,7 +9,7 @@ gitName=$(git config user.name)
 dirPath=$PWD
 dirName=$(basename $PWD)
 gitUrl=git@github.com:$gitName/$dirName.git  # wrong currently
-#siteDomain=$($0 db:where HEAD)    # make hube error
+#siteDomain=$($0 db:where HEAD)    # make hube error, infinity loop
 
 case "$1" in
     # # ===== LARA DEVLOPER COMMAND ===== #
@@ -109,8 +109,8 @@ case "$1" in
     # lara status                   # Check HEAD
     status)
         HEAD=$($0 db:where HEAD)
-        test -z $HEAD && printf "\e[31mYou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below:\n" && lara domain:list && exit
-        echo -e "you are on \e[33m$HEAD\e[0m project"
+        test -z $HEAD && printf "\e[31mYou are not on any domain\e[0m\n'\e[32mlara switch\e[0m' to your domain below:\n" && lara domain:list && exit
+        echo -e "you are on \e[33m$HEAD\e[0m domain"
         ;;
     # lara version                  # Show script version
     version)
@@ -120,11 +120,66 @@ case "$1" in
     # 
     # # ===== PROJECT CONTROL COMMAND ===== #
     # lara new <domain> [-dg]       # New a laravel project
-    # lara init <domain> [-d]       # Initial a laravelproject after clone
     # lara switch <domain>          # Switch HEAD to project
+    switch)
+        declare -a b=($($0 domain:list | grep $2))
+        test ${#b[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && exit
+        $0 db:mix HEAD ${b[0]}
+        $0 status
+        ;;
     # lara release <domain>         # Generate initial script to project
+    proj)
+
+        test -r laradock/nginx/sites/$siteDomain.conf || sed "s/server_name laravel.test/server_name $siteDomain/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$siteDomain.conf
+        grep -q $siteDomain /etc/hosts || sudo -- sh -c "echo '127.0.0.1       $siteDomain' >> /etc/hosts"
+        bash "$0" up "$3"n
+
+        cd laradock
+        case "$2" in
+            new) # create laradock + laravel project
+                echo "Wait several minutes to generate the project"
+                docker-compose exec --user=laradock workspace bash -c "composer create-project laravel/laravel --prefer-dist;"
+                [[ "$3" == '-'*'g'* ]] && docker-compose exec --user=laradock workspace bash -c "bash $0 git -i"
+                ;;
+
+            init | initial) # initial laradock + laravel project which clone from remote
+                echo "Wait several minutes to download the require"
+                docker-compose exec --user=laradock workspace bash -c "
+                    cd laravel;
+                    composer install;
+                    test -r .env || cp .env.example .env;
+                    php artisan key:generate --ansi;
+                    php artisan package:discover --ansi;
+                "
+                ;;
+        esac
+        cd ../
+        sed -e "s/DB_HOST=127.0.0.1/DB_HOST=mysql/" \
+            -e "s/DB_DATABASE=laravel/DB_DATABASE=default/" \
+            -e "s/DB_USERNAME=root/DB_USERNAME=default/" \
+            -e "s/DB_PASSWORD=secret/DB_PASSWORD=/" \
+            -e "s/DB_PASSWORD=/DB_PASSWORD=secret/" \
+            laravel/.env > tmp;
+        mv tmp laravel/.env
+
+        cd laradock
+        docker-compose exec --user=laradock workspace bash -c "
+            cd laravel;
+            php artisan migrate:fresh --seed;
+            php artisan migrate:status;
+        "
+        cd ../
+
+        # -c case, down docker-compose
+        if [[ "$3" == '-'*'c'* ]]; then 
+            bash "$0" down
+        else
+            bash "$0" site
+        fi
+        ;;
     # 
     # # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
+    # lara init [-d]                # Initial a laravelproject after clone
     # lara up [-der]                # Up HEAD project
     # lara down                     # down HEAD project
     # lara restart                  # restart HEAD project
@@ -138,15 +193,6 @@ case "$1" in
     # lara require swagger
     # lara require npm|sass         
     # lara require *                # general command as run in HEAD project
-    a)
-        siteDomain=$($0 db:where HEAD) 
-        echo $siteDomain
-        ;;
-
-
-    switch) ＃ switch to specific laravel project
-        echo $0
-        ;;
 
 
     # # ===== HADN"T DEAL ===== #
