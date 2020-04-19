@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# Global Infomation
+# Global Infomation (User level)
 test $(uname) == 'Darwin' && brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
 test $(uname) == 'Linux' && brewPath=/home/linuxbrew/.linuxbrew/Library/Taps/chumicat/homebrew-lara
 gitEmail=$(git config user.email)
 gitName=$(git config user.name)
 
-# Locat Information
+# Locat Information (Directory level)
 projectPath=$PWD
 projectName=$(basename $PWD)
 gitUrl=git@github.com:$gitName/$projectName.git
@@ -18,9 +18,12 @@ case "$1" in
     db:create)
         echo "CREATE TABLE t0(key TEXT, value TEXT);" | sqlite3 lara.db
         ;;
-    # lara db:select                # Locally, SELECT value with key in t0
-    db:select)
-        test -z $2 && echo "SELECT * FROM t0" | sqlite3 lara.db
+    # lara db:list                  # Locally, list all items in t0
+    db:list)
+        echo "SELECT * FROM t0" | sqlite3 lara.db
+        ;;
+    # lara db:where                 # Locally, return value matched key in t0
+    db:where)
         echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 lara.db
         ;;
     # lara db:insert                # Locally, INSERT item(key-value) in t0
@@ -38,13 +41,13 @@ case "$1" in
     # lara db:mix                   # Locally, INSERT/DELETE/UPDATE on situation, use as set
     db:mix)
         test -z $3 && lara db:delete $2 && exit
-        val=$(lara db:select $2)
+        val=$(lara db:where $2)
         test -z $val && lara db:insert $2 $3 && exit
         lara db:update $2 $3 && exit
         ;;
-    # lara db:                    # Locally, Do operation on value with key in t0
+    # lara db:                      # Locally, Do operation on value with key in t0
     db:)
-        value=$(lara db:select $3)
+        value=$(lara db:where $3)
         let "value$2"
         lara db:mix $3 $value
         ;;
@@ -53,8 +56,15 @@ case "$1" in
         test -z $2 && echo "SELECT * FROM t0" | sqlite3 $brewPath/lara.db
         echo "SELECT value FROM t0 WHERE key='$2'" | sqlite3 $brewPath/lara.db
         ;;
-
-    # lara lara:release             # Generate README.md
+    # lara lara:setenv              # Check and Set environment
+    lara:setenv)
+        bashPath=~/.bashrc
+        fishPath=~/.config/fish/config.fish
+        grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
+        grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
+        echo -e "\e[32mSet Environment Finish\e[0m"
+        ;;
+    # lara lara:readme              # Generate README.md
     lara:readme)
         cp README.pre.md README.md
         printf '\n```shell\n' >> README.md
@@ -65,7 +75,7 @@ case "$1" in
     lara:release)
         bash lara lara:readme
         bash lara db: ++ V2
-        echo "LARA $version $(lara db:select V0).$(lara db:select V1).$(lara db:select V2) RELEASE"
+        echo "LARA $version $(lara db:where V0).$(lara db:where V1).$(lara db:where V2) RELEASE"
         git add .
         msg=$2 && test -z $msg && msg="auto update / fast update"
         git commit -m "$msg"
@@ -76,23 +86,25 @@ case "$1" in
 
     # # ===== LARA GENERAL COMMAND ===== #
     # lara list                     # List all command
-    list) # list all command
+    list)
         grep -E "^(    # )" $0 | sed -e 's/    # //'
         ;;
+    # lara                          # List all domain
+    domain:list)
+        ls -d *.*/ | sed -e "s/\///"
+        ;;
     # lara status                   # Check HEAD
+    status)
+        HEAD=$(lara db:where HEAD)
+        test -z HEAD && printf "Ｙou are not on any project\n'lara switch' to your project" && exit
+        echo you are on $HEAD project
+        ;;
     # lara version                  # Show script version
     version)
         echo "LARA $version $(lara db:global V0).$(lara db:global V1).$(lara db:global V2)"
         echo "Copyright (c) Chumicat"
         ;;
-    # lara setenv                   # Check and Set environment
-    setenv)
-        bashPath=~/.bashrc
-        fishPath=~/.config/fish/config.fish
-        grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $brewPath" >> $fishPath
-        grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
-        echo -e "\e[32mSet Environment Finish\e[0m"
-        ;;
+
 
     # # ===== PROJECT CONTROL COMMAND ===== #
     # lara new <domain> [-dg]       # New a laravel project
