@@ -85,6 +85,14 @@ case "$1" in
         grep -q $brewPath $bashPath || echo "set PATH \$PATH $brewPath" >> $bashPath
         echo -e "\e[32mSet Environment Finish\e[0m"
         ;;
+    lara:se)
+        echo "$(dirname $0)"
+        bashPath=~/.bashrc
+        fishPath=~/.config/fish/config.fish
+        grep -q $brewPath $fishPath || ! test -d ~/.config/fish || echo "set PATH \$PATH $(dirname $0)" >> $fishPath
+        grep -q $brewPath $bashPath || echo "set PATH \$PATH $(dirname $0)" >> $bashPath
+        echo -e "\e[32mSet Environment Finish\e[0m"
+        ;;
     # lara lara:setdir              # Set lara working directory for all laravel peoject
     lara:setdir)
         lara db:create
