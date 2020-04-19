@@ -138,7 +138,9 @@ case "$1" in
     # lara require swagger
     # lara require npm|sass         
     # lara require *                # general command as run in HEAD project
-
+    a)
+        $0 db:where HEAD
+        ;;
 
 
     switch) ＃ switch to specific laravel project
