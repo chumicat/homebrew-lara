@@ -9,7 +9,7 @@ lara db:insert                # Locally, INSERT item(key-value) in t0
 lara db:delete                # Locally, DELETE item with key in t0
 lara db:update                # Locally, UPDATE item with key in t0
 lara db:mix                   # Locally, INSERT/DELETE/UPDATE on situation, use as set
-lara db:++                    # Locally, Do operation on value with key in t0
+lara db:                    # Locally, Do operation on value with key in t0
 lara db:global                # Globally, SELECT global data, read only
 lara lara:release             # Generate README.md
 lara lara:release             # Do trivia and release lara
