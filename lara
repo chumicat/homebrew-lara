@@ -118,6 +118,7 @@ case "$1" in
 
 
     switch) ＃ switch to specific laravel project
+        echo $0
         ;;
 
 
