@@ -96,7 +96,7 @@ case "$1" in
     # lara status                   # Check HEAD
     status)
         HEAD=$(lara db:where HEAD)
-        test -z HEAD && printf "Ｙou are not on any project\n'lara switch' to your project" && exit
+        test -z $HEAD && printf "\e[31mＹou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below" && lara domain:list && exit
         echo you are on $HEAD project
         ;;
     # lara version                  # Show script version
