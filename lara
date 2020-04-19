@@ -122,9 +122,9 @@ case "$1" in
     # lara new <domain> [-dg]       # New a laravel project
     # lara switch <domain>          # Switch HEAD to project
     switch)
-        declare -a b=($($0 domain:list | grep $2))
-        test ${#b[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && exit
-        $0 db:mix HEAD ${b[0]}
+        declare -a domainList=($($0 domain:list | grep $2))
+        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && exit
+        $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
     # lara release <domain>         # Generate initial script to project
