@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 
 # Global Infomation (User level)
-# test $(uname) == 'Darwin' && brewPath=/usr/local/Homebrew/Library/Taps/chumicat/homebrew-lara
-# test $(uname) == 'Linux' && brewPath=/home/linuxbrew/.linuxbrew/Library/Taps/chumicat/homebrew-lara
 brewPath=$(dirname $0)
 gitEmail=$(git config user.email)
 gitName=$(git config user.name)
 
 # Locat Information (Directory level)
-projectPath=$PWD
-projectName=$(basename $PWD)
-gitUrl=git@github.com:$gitName/$projectName.git
-siteDomain=laravel.test
+dirPath=$PWD
+dirName=$(basename $PWD)
+gitUrl=git@github.com:$gitName/$dirName.git  # wrong currently
+siteDomain=$($0 db:where HEAD)
 
 case "$1" in
     # # ===== LARA DEVLOPER COMMAND ===== #
@@ -41,16 +39,16 @@ case "$1" in
         ;;
     # lara db:mix                   # Locally, INSERT/DELETE/UPDATE on situation, use as set
     db:mix)
-        test -z $3 && lara db:delete $2 && exit
-        val=$(lara db:where $2)
-        test -z $val && lara db:insert $2 $3 && exit
-        lara db:update $2 $3 && exit
+        test -z $3 && $0 db:delete $2 && exit
+        val=$($0 db:where $2)
+        test -z $val && $0 db:insert $2 $3 && exit
+        $0 db:update $2 $3 && exit
         ;;
     # lara db:                      # Locally, Do operation on value with key in t0
     db:)
-        value=$(lara db:where $3)
+        value=$($0 db:where $3)
         let "value$2"
-        lara db:mix $3 $value
+        $0 db:mix $3 $value
         ;;
     # lara db:global                # Globally, SELECT global data, read only
     db:global)
@@ -61,14 +59,14 @@ case "$1" in
     dev:readme)
         cp README.pre.md README.md
         printf '\n```shell\n' >> README.md
-        bash lara list >> README.md
+        bash $0 list >> README.md
         printf '\n```' >> README.md
         ;;
     # lara dev:release              # Do trivia and release lara
     dev:release)
-        bash lara dev:readme
-        bash lara db: ++ V2
-        echo "LARA $version $(lara db:where V0).$(lara db:where V1).$(lara db:where V2) RELEASE"
+        bash $0 dev:readme
+        bash $0 db: ++ V2
+        echo "LARA $version $($0 db:where V0).$($0 db:where V1).$($0 db:where V2) RELEASE"
         git add .
         msg=$2 && test -z $msg && msg="auto update / fast update"
         git commit -m "$msg"
@@ -110,13 +108,13 @@ case "$1" in
         ;;
     # lara status                   # Check HEAD
     status)
-        HEAD=$(lara db:where HEAD)
+        HEAD=$($0 db:where HEAD)
         test -z $HEAD && printf "\e[31mYou are not on any project\e[0m\n'\e[32mlara switch\e[0m' to your project below:\n" && lara domain:list && exit
         echo -e "you are on \e[33m$HEAD\e[0m project"
         ;;
     # lara version                  # Show script version
     version)
-        echo "LARA $version $(lara db:global V0).$(lara db:global V1).$(lara db:global V2)"
+        echo "LARA $version $($0 db:global V0).$($0 db:global V1).$($0 db:global V2)"
         echo "Copyright (c) Chumicat"
         ;;
     # 
@@ -138,7 +136,7 @@ case "$1" in
     # # ===== IN PROJECT COMMAND (IN DOCKER) ===== #
     # lara require ...              # require package to HEAD project
     # lara require swagger
-    # lara require npm|sasslara
+    # lara require npm|sass         
     # lara require *                # general command as run in HEAD project
 
 

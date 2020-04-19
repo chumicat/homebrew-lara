@@ -44,7 +44,7 @@ lara site api                 # open HEAD project swagger API document
 # ===== IN PROJECT COMMAND (IN DOCKER) ===== #
 lara require ...              # require package to HEAD project
 lara require swagger
-lara require npm|sasslara
+lara require npm|sass         
 lara require *                # general command as run in HEAD project
 # ===== HADN"T DEAL ===== #
 
