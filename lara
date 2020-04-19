@@ -82,7 +82,7 @@ case "$1" in
     # lara status                   # Check HEAD
     # lara version                  # Show script version
     version)
-        echo "LARA $version $(lara db:select V0).$(lara db:select V1).$(lara db:select V2)"
+        echo "LARA $version $(lara db:global V0).$(lara db:global V1).$(lara db:global V2)"
         echo "Copyright (c) Chumicat"
         ;;
     # lara setenv                   # Check and Set environment
