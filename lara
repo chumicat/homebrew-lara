@@ -9,7 +9,7 @@ gitName=$(git config user.name)
 dirPath=$PWD
 dirName=$(basename $PWD)
 gitUrl=git@github.com:$gitName/$dirName.git  # wrong currently
-siteDomain=$($0 db:where HEAD)
+#siteDomain=$($0 db:where HEAD)    # make hube error
 
 case "$1" in
     # # ===== LARA DEVLOPER COMMAND ===== #
