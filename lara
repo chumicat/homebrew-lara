@@ -137,22 +137,26 @@ case "$1" in
         $0 status
         ;;
     run)
-        echo 'i'
-        cd laradock 
-        docker-compose exec --user=laradock workspace bash -c "$2"
-        cd ../
+        cd laradock; docker-compose exec --user=$2 workspace bash -c "$3"
         ;;
-    a)
-        echo ho
-        $0 run "
-        echo fuck;
-        echo hil;
-        "
+    dir:check)
+        ! test -d laradock || ! test -f lara.dbs && echo -e "Is this your dir? Set with '\e[32mlara setdir\e[0m'." && exit
+        ;;
+    b)
+        . $0 dir:check
+        echo 'b'
+        ;;
+    new)
+        lara db:mix HEAD 
+        echo -e "\e[33mWait several minutes to generate the project\e[0m"
+        docker-compose exec --user=laradock workspace bash -c "composer create-project laravel/laravel --prefer-dist;"
+        [[ "$3" == '-'*'g'* ]] && docker-compose exec --user=laradock workspace bash -c "bash $0 git -i"
+        $0 init
         ;;
     init)
         echo -e "\e[33mWait several minutes to download the require\e[0m"
-        $0 run "
-            cd laravel;
+        $0 run laradock "
+            cd head;
             composer install;
             test -r .env || cp .env.example .env;
             php artisan key:generate --ansi;
