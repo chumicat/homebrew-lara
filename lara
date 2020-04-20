@@ -150,11 +150,10 @@ case "$1" in
         test -z "$2" && echo -e "\e[31mNew domain name required\e[0m" && exit
         [[ "$2" == *" "* ]] && echo -e '\e[31mNo space allowed\e[0m' && exit
         test -z $(echo "$2" | grep ".\..") && echo -e '\e[31mDomain not fit format\e[0m' && exit
-        echo 'hi'
         ! test -z $($0 domain:fullmatch $2) && echo -e '\e[31mDomain already exist\e[0m' && exit
-        echo "finish"
         ;;
     new)
+        # [[ $3 == '-f' ]] && echo 'force' && rm -rf $2
         . $0 lara:dircheck
         . $0 domain:newcheck $2
         echo -e "\e[33mWait several minutes to generate the project\e[0m"
