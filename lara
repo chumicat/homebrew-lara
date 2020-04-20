@@ -157,12 +157,13 @@ case "$1" in
         . $0 lara:dircheck
         . $0 domain:newcheck $2
         echo -e "\e[33mWait several minutes to generate the project\e[0m"
-        lara run laradock "composer create-project laravel/laravel $2 --prefer-dist;" || exit
-        lara db:mix HEAD $2
+        $0 run laradock "composer create-project laravel/laravel $2 --prefer-dist;" || exit
+        $0 db:mix HEAD $2
         $0 init
         ;;
     init)
         echo -e "\e[33mWait several minutes to download the require\e[0m"
+        HEAD= 
         $0 run laradock "
             cd head;
             composer install;
