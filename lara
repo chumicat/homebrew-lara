@@ -102,14 +102,18 @@ case "$1" in
         ;;
     # lara domain:lara              # List all domain
     domain:list)
-        printf "\e[33m"
-        ls -d *.*/ | sed -e "s/\///"
-        printf "\e[0m"
+        # printf "\e[33m"
+        # ls -d *.*/ | sed -e "s/\///"
+        # printf "\e[0m"
+        #printf "\e[33m"
+        ret=$(ls -d *.*/ | sed -e "s/\///")
+        test -z $2 && echo -e "\e[33m$ret\e[0m" || echo -e "$ret" | grep $2
+        # echo "\e[0m"
         ;;
     # lara status                   # Check HEAD
     status)
         HEAD=$($0 db:where HEAD)
-        test -z $HEAD && printf "\e[31mYou are not on any domain\e[0m\n'\e[32mlara switch\e[0m' to your domain below:\n" && lara domain:list && exit
+        test -z $HEAD && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:msg && exit
         echo -e "you are on \e[33m$HEAD\e[0m domain"
         ;;
     # lara version                  # Show script version
@@ -119,32 +123,65 @@ case "$1" in
         ;;
     # 
     # # ===== PROJECT CONTROL COMMAND ===== #
-    # lara new <domain> [-dg]       # New a laravel project
+    domain:msg)
+        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && lara domain:list
+        ;;
+    # lara new <domain> [-dg]       # New a laravel project and switch on it
     # lara switch <domain>          # Switch HEAD to project
     switch)
-        declare -a domainList=($($0 domain:list | grep $2))
-        test ${#domainList[@]} -eq 0 && echo -e "\e[31mDomain not exist!!\e[0m" && exit
-        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && exit
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:msg && exit
+        declare -a domainList=($($0 domain:list $2))
+        test ${#domainList[@]} -eq 0 && echo -e "\e[31mDomain not exist!!\e[0m" && lara domain:msg && exit
+        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && lara domain:msg && exit
         $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
-    # lara release <domain>         # Generate initial script to project
+    run)
+        echo 'i'
+        cd laradock 
+        docker-compose exec --user=laradock workspace bash -c "$2"
+        cd ../
+        ;;
+    a)
+        echo ho
+        $0 run "
+        echo fuck;
+        echo hil;
+        "
+        ;;
+    init)
+        echo -e "\e[33mWait several minutes to download the require\e[0m"
+        $0 run "
+            cd laravel;
+            composer install;
+            test -r .env || cp .env.example .env;
+            php artisan key:generate --ansi;
+            php artisan package:discover --ansi;
+        "
+        sed -e "s/DB_HOST=127.0.0.1/DB_HOST=mysql/" \
+        -e "s/DB_DATABASE=laravel/DB_DATABASE=default/" \
+        -e "s/DB_USERNAME=root/DB_USERNAME=default/" \
+        -e "s/DB_PASSWORD=secret/DB_PASSWORD=/" \
+        -e "s/DB_PASSWORD=/DB_PASSWORD=secret/" \
+        laravel/.env > tmp;
+        mv tmp laravel/.env
+        ;;
     proj)
-
-        test -r laradock/nginx/sites/$siteDomain.conf || sed "s/server_name laravel.test/server_name $siteDomain/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$siteDomain.conf
-        grep -q $siteDomain /etc/hosts || sudo -- sh -c "echo '127.0.0.1       $siteDomain' >> /etc/hosts"
-        bash "$0" up "$3"n
+        domain=$2
+        test -r laradock/nginx/sites/$domain.conf || sed "s/server_name laravel.test/server_name $domain/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$domain.conf
+        ! grep -q $domain /etc/hosts && echo -e "\e[32mRegist host, Password might needed.\e[0m" && sudo -- sh -c "echo '127.0.0.1       $domain' >> /etc/hosts"
+        "$0" up "$3"n
 
         cd laradock
         case "$2" in
             new) # create laradock + laravel project
-                echo "Wait several minutes to generate the project"
+                echo -e "\e[33mWait several minutes to generate the project\e[0m"
                 docker-compose exec --user=laradock workspace bash -c "composer create-project laravel/laravel --prefer-dist;"
                 [[ "$3" == '-'*'g'* ]] && docker-compose exec --user=laradock workspace bash -c "bash $0 git -i"
                 ;;
 
             init | initial) # initial laradock + laravel project which clone from remote
-                echo "Wait several minutes to download the require"
+                echo -e "\e[33mWait several minutes to download the require\e[0m"
                 docker-compose exec --user=laradock workspace bash -c "
                     cd laravel;
                     composer install;
@@ -188,6 +225,7 @@ case "$1" in
     # lara enter [-r]               # enter HEAD project workspace
     # lara site                     # open HEAD project site and document
     # lara site api                 # open HEAD project swagger API document
+    # lara release                  # Generate initial script to project
     # 
     # # ===== IN PROJECT COMMAND (IN DOCKER) ===== #
     # lara require ...              # require package to HEAD project
@@ -204,8 +242,8 @@ case "$1" in
     proj)
         git clone https://github.com/laradock/laradock.git
         test -r laradock/.env || cp laradock/env-example laradock/.env
-        test -r laradock/nginx/sites/$siteDomain.conf || sed "s/server_name laravel.test/server_name $siteDomain/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$siteDomain.conf
-        grep -q $siteDomain /etc/hosts || sudo -- sh -c "echo '127.0.0.1       $siteDomain' >> /etc/hosts"
+        test -r laradock/nginx/sites/$domain.conf || sed "s/server_name laravel.test/server_name $domain/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$domain.conf
+        grep -q $domain /etc/hosts || sudo -- sh -c "echo '127.0.0.1       $domain' >> /etc/hosts"
         bash "$0" up "$3"n
 
         cd laradock
@@ -348,9 +386,9 @@ case "$1" in
         ;;
 
     site)
-        open http://$siteDomain/$2
-        open http://$siteDomain/ntr
-        open http://$siteDomain/api/documentation
+        open http://$domain/$2
+        open http://$domain/ntr
+        open http://$domain/api/documentation
         ;;
     
     lara)

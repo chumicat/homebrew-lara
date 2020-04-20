@@ -27,9 +27,8 @@ lara status                   # Check HEAD
 lara version                  # Show script version
 
 # ===== PROJECT CONTROL COMMAND ===== #
-lara new <domain> [-dg]       # New a laravel project
+lara new <domain> [-dg]       # New a laravel project and switch on it
 lara switch <domain>          # Switch HEAD to project
-lara release <domain>         # Generate initial script to project
 
 # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
 lara init [-d]                # Initial a laravelproject after clone
@@ -40,6 +39,7 @@ lara downup [-der]            # downup HEAD project
 lara enter [-r]               # enter HEAD project workspace
 lara site                     # open HEAD project site and document
 lara site api                 # open HEAD project swagger API document
+lara release                  # Generate initial script to project
 
 # ===== IN PROJECT COMMAND (IN DOCKER) ===== #
 lara require ...              # require package to HEAD project
