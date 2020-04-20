@@ -106,12 +106,14 @@ case "$1" in
         ret=$(ls -d *.*/ | sed -e "s/\///")
         test -z $2 && echo -e "$ret" || echo -e "$ret" | grep $2
         ;;
-    # lara status                   # Check HEAD
-    a)
-        test $2 == 'pure' && echo ''
+    # lara domain:list              # List all domain with message and color
+    domain:list)
+        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:purelist; printf "\e[0m"
         ;;
+    # lara status                   # Check HEAD
     status)
         HEAD=$($0 db:where HEAD)
+        test -z $(bash $0 domain:fullmatch $HEAD) && $0 db:mix HEAD && HEAD=
         test -z $HEAD && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:list && exit
         echo -e "you are on \e[33m$HEAD\e[0m domain"
         ;;
@@ -122,10 +124,6 @@ case "$1" in
         ;;
     # 
     # # ===== PROJECT CONTROL COMMAND ===== #
-    # lara domain:list              # List all domain with message and color
-    domain:list)
-        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:purelist; printf "\e[0m"
-        ;;
     # lara new <domain> [-dg]       # New a laravel project and switch on it
     # lara switch <domain>          # Switch HEAD to project
     switch)
@@ -136,14 +134,9 @@ case "$1" in
         $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
-    check:domain)
+    domain:fullmatch)
         test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:list && exit
-        # declare -a domainList=($($0 domain:purelist))
-        # echo ${domainList[0]} ${domainList[1]} ${domainList[2]} ${domainList[3]}
-        $0 domain:purelist 
         $0 domain:purelist | grep -e "^$2$"
-        # $0 db:mix HEAD ${domainList[0]}
-        # $0 status
         ;;
     # lara run <user> <command>     # Run command in workspace
     run)
