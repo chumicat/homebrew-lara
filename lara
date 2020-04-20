@@ -154,12 +154,10 @@ case "$1" in
         ;;
     new)
         . $0 lara:dircheck
-        . $0 domain:newcheck
-
-        lara db:mix HEAD $2
+        . $0 domain:newcheck $2
         echo -e "\e[33mWait several minutes to generate the project\e[0m"
-        docker-compose exec --user=laradock workspace bash -c "composer create-project laravel/laravel --prefer-dist;"
-        [[ "$3" == '-'*'g'* ]] && docker-compose exec --user=laradock workspace bash -c "bash $0 git -i"
+        lara run laradock "composer create-project laravel/laravel $2 --prefer-dist;" || exit
+        lara db:mix HEAD $2
         $0 init
         ;;
     init)
