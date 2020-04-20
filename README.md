@@ -22,11 +22,13 @@ lara lara:unsetdir            # Remove laradock and db of lara working directory
 
 # ===== LARA GENERAL COMMAND ===== #
 lara list                     # List all command
-lara domain:lara              # List all domain
+lara domain:purelist          # List all domain purely
+lara domain:purelist <needle> # List all domain purely and matched needle
 lara status                   # Check HEAD
 lara version                  # Show script version
 
 # ===== PROJECT CONTROL COMMAND ===== #
+lara domain:list              # List all domain with message and color
 lara new <domain> [-dg]       # New a laravel project and switch on it
 lara switch <domain>          # Switch HEAD to project
 lara run <user> <command>     # Run command in workspace

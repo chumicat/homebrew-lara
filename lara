@@ -100,15 +100,19 @@ case "$1" in
     list)
         grep -E "^(    # )" $0 | sed -e 's/    # //'
         ;;
-    # lara domain:lara              # List all domain
-    domain:list)
+    # lara domain:purelist          # List all domain purely
+    # lara domain:purelist <needle> # List all domain purely and matched needle
+    domain:purelist)
         ret=$(ls -d *.*/ | sed -e "s/\///")
         test -z $2 && echo -e "$ret" || echo -e "$ret" | grep $2
         ;;
     # lara status                   # Check HEAD
+    a)
+        test $2 == 'pure' && echo ''
+        ;;
     status)
         HEAD=$($0 db:where HEAD)
-        test -z $HEAD && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:msg && exit
+        test -z $HEAD && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:list && exit
         echo -e "you are on \e[33m$HEAD\e[0m domain"
         ;;
     # lara version                  # Show script version
@@ -118,25 +122,26 @@ case "$1" in
         ;;
     # 
     # # ===== PROJECT CONTROL COMMAND ===== #
-    domain:msg)
-        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:list; printf "\e[0m"
+    # lara domain:list              # List all domain with message and color
+    domain:list)
+        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:purelist; printf "\e[0m"
         ;;
     # lara new <domain> [-dg]       # New a laravel project and switch on it
     # lara switch <domain>          # Switch HEAD to project
     switch)
-        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:msg && exit
-        declare -a domainList=($($0 domain:list $2))
-        test ${#domainList[@]} -eq 0 && echo -e "\e[31mDomain not exist!!\e[0m" && lara domain:msg && exit
-        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && lara domain:msg && exit
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:list && exit
+        declare -a domainList=($($0 domain:purelist $2))
+        test ${#domainList[@]} -eq 0 && echo -e "\e[31mDomain not exist!!\e[0m" && lara domain:list && exit
+        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && lara domain:list && exit
         $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
     check:domain)
-        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:msg && exit
-        # declare -a domainList=($($0 domain:list))
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:list && exit
+        # declare -a domainList=($($0 domain:purelist))
         # echo ${domainList[0]} ${domainList[1]} ${domainList[2]} ${domainList[3]}
-        $0 domain:list
-        $0 domain:list | grep -e "^$2$"
+        $0 domain:purelist 
+        $0 domain:purelist | grep -e "^$2$"
         # $0 db:mix HEAD ${domainList[0]}
         # $0 status
         ;;
