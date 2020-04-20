@@ -113,7 +113,7 @@ case "$1" in
     # lara status                   # Check HEAD
     status)
         HEAD=$($0 db:where HEAD)
-        test -z $(bash $0 domain:fullmatch $HEAD) && $0 db:mix HEAD && HEAD=
+        test -z $($0 domain:fullmatch $HEAD) && $0 db:mix HEAD && HEAD=
         test -z $HEAD && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:list && exit
         echo -e "you are on \e[33m$HEAD\e[0m domain"
         ;;
@@ -127,15 +127,15 @@ case "$1" in
     # lara new <domain> [-dg]       # New a laravel project and switch on it
     # lara switch <domain>          # Switch HEAD to project
     switch)
-        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:list && exit
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && $0 domain:list && exit
         declare -a domainList=($($0 domain:purelist $2))
-        test ${#domainList[@]} -eq 0 && echo -e "\e[31mDomain not exist!!\e[0m" && lara domain:list && exit
-        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && lara domain:list && exit
+        test ${#domainList[@]} -eq 0 && echo -e "\e[31mDomain not exist!!\e[0m" && $0 domain:list && exit
+        test ${#domainList[@]} -ne 1 && echo -e "\e[31mMultiple domain found!!\e[0m" && $0 domain:list && exit
         $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
     domain:fullmatch)
-        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:list && exit
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && $0 domain:list && exit
         $0 domain:purelist | grep -e "^$2$"
         ;;
     # lara run <user> <command>     # Run command in workspace
@@ -146,8 +146,15 @@ case "$1" in
     lara:dircheck)
         ! test -d laradock || ! test -f lara.db && echo -e "Is this your dir? Please set with '\e[32mlara setdir\e[0m'." && exit
         ;;
+    domain:newcheck)
+        test -z "$2" && echo -e "\e[31mNew domain name required\e[0m" && exit
+        [[ "$2" == *" "* ]] && echo -e '\e[31mNo space allowed\e[0m' && exit
+        test -z $(echo "$2" | grep ".\..") && echo -e '\e[31mDomain not fit format\e[0m' && exit
+        test -z $($0 domain:fullmatch $2) || echo -e '\e[31mDomain already exist\e[0m' && exit
+        ;;
     new)
         . $0 lara:dircheck
+        . $0 domain:newcheck
 
         lara db:mix HEAD $2
         echo -e "\e[33mWait several minutes to generate the project\e[0m"
