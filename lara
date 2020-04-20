@@ -102,13 +102,8 @@ case "$1" in
         ;;
     # lara domain:lara              # List all domain
     domain:list)
-        # printf "\e[33m"
-        # ls -d *.*/ | sed -e "s/\///"
-        # printf "\e[0m"
-        #printf "\e[33m"
         ret=$(ls -d *.*/ | sed -e "s/\///")
-        test -z $2 && echo -e "\e[33m$ret\e[0m" || echo -e "$ret" | grep $2
-        # echo "\e[0m"
+        test -z $2 && echo -e "$ret" || echo -e "$ret" | grep $2
         ;;
     # lara status                   # Check HEAD
     status)
@@ -124,7 +119,7 @@ case "$1" in
     # 
     # # ===== PROJECT CONTROL COMMAND ===== #
     domain:msg)
-        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && lara domain:list
+        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:list; printf "\e[0m"
         ;;
     # lara new <domain> [-dg]       # New a laravel project and switch on it
     # lara switch <domain>          # Switch HEAD to project
@@ -136,18 +131,27 @@ case "$1" in
         $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
+    check:domain)
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && lara domain:msg && exit
+        # declare -a domainList=($($0 domain:list))
+        # echo ${domainList[0]} ${domainList[1]} ${domainList[2]} ${domainList[3]}
+        $0 domain:list
+        $0 domain:list | grep -e "^$2$"
+        # $0 db:mix HEAD ${domainList[0]}
+        # $0 status
+        ;;
+    # lara run <user> <command>     # Run command in workspace
     run)
         cd laradock; docker-compose exec --user=$2 workspace bash -c "$3"
         ;;
-    dir:check)
-        ! test -d laradock || ! test -f lara.dbs && echo -e "Is this your dir? Set with '\e[32mlara setdir\e[0m'." && exit
-        ;;
-    b)
-        . $0 dir:check
-        echo 'b'
+    # dir:check                     # Check if PWD is a dir and exit if not
+    lara:dircheck)
+        ! test -d laradock || ! test -f lara.db && echo -e "Is this your dir? Please set with '\e[32mlara setdir\e[0m'." && exit
         ;;
     new)
-        lara db:mix HEAD 
+        . $0 lara:dircheck
+
+        lara db:mix HEAD $2
         echo -e "\e[33mWait several minutes to generate the project\e[0m"
         docker-compose exec --user=laradock workspace bash -c "composer create-project laravel/laravel --prefer-dist;"
         [[ "$3" == '-'*'g'* ]] && docker-compose exec --user=laradock workspace bash -c "bash $0 git -i"

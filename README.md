@@ -29,6 +29,8 @@ lara version                  # Show script version
 # ===== PROJECT CONTROL COMMAND ===== #
 lara new <domain> [-dg]       # New a laravel project and switch on it
 lara switch <domain>          # Switch HEAD to project
+lara run <user> <command>     # Run command in workspace
+dir:check                     # Check if PWD is a dir and exit if not
 
 # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
 lara init [-d]                # Initial a laravelproject after clone
