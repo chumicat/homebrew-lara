@@ -161,11 +161,15 @@ case "$1" in
         $0 db:mix HEAD $2
         $0 init
         ;;
+    domain:setconf)
+        test -r laradock/nginx/sites/$2.conf || sed "s/server_name laravel.test/server_name $2/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$2.conf
+        ! grep -q $2 /etc/hosts && echo -e "\e[32mRegist host, Password might needed.\e[0m" && sudo -- sh -c "echo '127.0.0.1       $domain' >> /etc/hosts"
+        ;;
     init)
         echo -e "\e[33mWait several minutes to download the require\e[0m"
-        HEAD= 
+        domain=$($0 db:where HEAD)
         $0 run laradock "
-            cd head;
+            cd $domain;
             composer install;
             test -r .env || cp .env.example .env;
             php artisan key:generate --ansi;
@@ -178,40 +182,12 @@ case "$1" in
         -e "s/DB_PASSWORD=/DB_PASSWORD=secret/" \
         laravel/.env > tmp;
         mv tmp laravel/.env
+
+        $0 domain:setconf
         ;;
     proj)
-        domain=$2
-        test -r laradock/nginx/sites/$domain.conf || sed "s/server_name laravel.test/server_name $domain/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$domain.conf
-        ! grep -q $domain /etc/hosts && echo -e "\e[32mRegist host, Password might needed.\e[0m" && sudo -- sh -c "echo '127.0.0.1       $domain' >> /etc/hosts"
         "$0" up "$3"n
 
-        cd laradock
-        case "$2" in
-            new) # create laradock + laravel project
-                echo -e "\e[33mWait several minutes to generate the project\e[0m"
-                docker-compose exec --user=laradock workspace bash -c "composer create-project laravel/laravel --prefer-dist;"
-                [[ "$3" == '-'*'g'* ]] && docker-compose exec --user=laradock workspace bash -c "bash $0 git -i"
-                ;;
-
-            init | initial) # initial laradock + laravel project which clone from remote
-                echo -e "\e[33mWait several minutes to download the require\e[0m"
-                docker-compose exec --user=laradock workspace bash -c "
-                    cd laravel;
-                    composer install;
-                    test -r .env || cp .env.example .env;
-                    php artisan key:generate --ansi;
-                    php artisan package:discover --ansi;
-                "
-                ;;
-        esac
-        cd ../
-        sed -e "s/DB_HOST=127.0.0.1/DB_HOST=mysql/" \
-            -e "s/DB_DATABASE=laravel/DB_DATABASE=default/" \
-            -e "s/DB_USERNAME=root/DB_USERNAME=default/" \
-            -e "s/DB_PASSWORD=secret/DB_PASSWORD=/" \
-            -e "s/DB_PASSWORD=/DB_PASSWORD=secret/" \
-            laravel/.env > tmp;
-        mv tmp laravel/.env
 
         cd laradock
         docker-compose exec --user=laradock workspace bash -c "
@@ -247,7 +223,7 @@ case "$1" in
     # lara require *                # general command as run in HEAD project
 
 
-    # # ===== HADN"T DEAL ===== #
+    # # ===== HADN'T DEAL ===== #
     new | init) # alias
         bash $0 proj $1 $2
         ;;
