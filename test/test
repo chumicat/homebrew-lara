@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# ===== Show Result ===== #
+if ! test -z $1; then 
+    if [[ $2 == $3 ]] ; then
+        echo -e "\e[32m$1 pass\e[0m"
+    else
+        echo -e "\e[31m$1 false\e[0m"
+    fi
+    exit
+fi
+
+# ===== Clear before start test ===== #
+rm -rf lara.db a.b c.d
+ls | test -z $(grep "^test$")
+    ./test initial 1 $?
+
+# ===== Testing data ===== #
+lara db:create; test -f "lara.db";
+    ./test db:create 0 $?
+lara db:mix TAG note1; lara db:where TAG | test -z $(grep "^note1$")
+    ./test db:mix_0,db:insert 1 $?
+lara db:mix ORI origi; lara db:where ORI | test -z $(grep "^origi$")
+    ./test db:mix_1,db:where 1 $?
+lara db:mix TAG; lara db:where TAG | test -z $(grep "^note1$")
+    ./test db:mix_2,db:delete 0 $?
+lara db:mix ORI hi; lara db:where ORI | test -z $(grep "^hi$")
+    ./test db:mix_3,db:update 1 $?
+lara db: ++ A; lara db:where A | test -z $(grep "^1$")
+    ./test db: 1 $?
+mkdir a.b; lara domain:purelist | test -z $(grep "^a.b$")
+    ./test domain:list 1 $?
+lara domain:fullmatch a.b | test -z $(grep "^a.b$")
+    ./test domain:fullmatch_0 1 $?
+lara domain:fullmatch c.d | test -z $(grep "^c.d$")
+    ./test domain:fullmatch_1 0 $?
+test -z "$(lara domain:newcheck a.b)"
+    ./test domain:newcheck_0 1 $?
+test -z "$(lara domain:newcheck c.d)"
+    ./test domain:newcheck_1 0 $?
+n=$(lara switch a.b); lara db:where HEAD | test -z $(grep "^a.b$")
+    ./test switch 1 $?

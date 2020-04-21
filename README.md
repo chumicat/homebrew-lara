@@ -22,17 +22,21 @@ lara lara:unsetdir            # Remove laradock and db of lara working directory
 
 # ===== LARA GENERAL COMMAND ===== #
 lara list                     # List all command
+lara domain:list              # List all domain with message and color
 lara domain:purelist          # List all domain purely
 lara domain:purelist <needle> # List all domain purely and matched needle
-lara domain:list              # List all domain with message and color
-lara status                   # Check HEAD
+lara domain:fullmatch <domain> # Check if given fit an exist domain and return given if exist
+. lara domain:newcheck <domain> # Check if given fit a new domain format and exit if not
+lara status                   # Check HEAD on which domain project
 lara version                  # Show script version
 
 # ===== PROJECT CONTROL COMMAND ===== #
-lara new <domain> [-dg]       # New a laravel project and switch on it
 lara switch <domain>          # Switch HEAD to project
 lara run <user> <command>     # Run command in workspace
-dir:check                     # Check if PWD is a dir and exit if not
+. lara dircheck               # Check if PWD is a dir and exit if not
+lara new <domain> [-dg]       # New a laravel project and switch on it
+lara domain:setconf <domain>  # Set conf in laradock with given domain
+lara init [-d]                # Initial a laravelproject after clone
 
 # ===== IN PROJECT COMMAND (OUT DOCKER) ===== #
 lara init [-d]                # Initial a laravelproject after clone
@@ -50,6 +54,6 @@ lara require ...              # require package to HEAD project
 lara require swagger
 lara require npm|sass         
 lara require *                # general command as run in HEAD project
-# ===== HADN"T DEAL ===== #
+# ===== HADN'T DEAL ===== #
 
 ```
