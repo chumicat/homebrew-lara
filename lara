@@ -100,22 +100,34 @@ case "$1" in
     list)
         grep -E "^(    # )" $0 | sed -e 's/    # //'
         ;;
+    # lara domain:list              # List all domain with message and color
+    domain:list)
+        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:purelist; printf "\e[0m"
+        ;;
     # lara domain:purelist          # List all domain purely
     # lara domain:purelist <needle> # List all domain purely and matched needle
     domain:purelist)
         ret=$(ls -d *.*/ | sed -e "s/\///")
         test -z $2 && echo -e "$ret" || echo -e "$ret" | grep $2
         ;;
-    # lara domain:list              # List all domain with message and color
-    domain:list)
-        echo -e "'\e[32mlara switch\e[0m' \e[35mto your domain below:\e[0m" && printf "\e[33m"; $0 domain:purelist; printf "\e[0m"
+    # lara domain:fullmatch <domain> # Check if given fit an exist domain and return given if exist
+    domain:fullmatch)
+        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && $0 domain:list && exit
+        $0 domain:purelist | grep -e "^$2$"
         ;;
-    # lara status                   # Check HEAD
+    # . lara domain:newcheck <domain> # Check if given fit a new domain format and exit if not
+    domain:newcheck)
+        test -z "$2" && echo -e "\e[31mNew domain name required\e[0m" && exit
+        [[ "$2" == *" "* ]] && echo -e '\e[31mNo space allowed\e[0m' && exit
+        test -z $(echo "$2" | grep ".\..") && echo -e '\e[31mDomain not fit format\e[0m' && exit
+        ! test -z $($0 domain:fullmatch $2) && echo -e '\e[31mDomain already exist\e[0m' && exit
+        ;;
+    # lara status                   # Check HEAD on which domain project
     status)
-        HEAD=$($0 db:where HEAD)
-        test -z $($0 domain:fullmatch $HEAD) && $0 db:mix HEAD && HEAD=
-        test -z $HEAD && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:list && exit
-        echo -e "you are on \e[33m$HEAD\e[0m domain"
+        domain=$($0 db:where HEAD)
+        test -z $($0 domain:fullmatch $domain) && $0 db:mix HEAD && HEAD=
+        test -z $domain && echo -e "\e[31mYou are not on any domain.\e[0m" && lara domain:list && exit
+        echo -e "you are on \e[33m$domain\e[0m domain"
         ;;
     # lara version                  # Show script version
     version)
@@ -124,7 +136,6 @@ case "$1" in
         ;;
     # 
     # # ===== PROJECT CONTROL COMMAND ===== #
-    # lara new <domain> [-dg]       # New a laravel project and switch on it
     # lara switch <domain>          # Switch HEAD to project
     switch)
         test -z $2 && echo -e "\e[35mDomain name required\e[0m" && $0 domain:list && exit
@@ -134,37 +145,30 @@ case "$1" in
         $0 db:mix HEAD ${domainList[0]}
         $0 status
         ;;
-    domain:fullmatch)
-        test -z $2 && echo -e "\e[35mDomain name required\e[0m" && $0 domain:list && exit
-        $0 domain:purelist | grep -e "^$2$"
-        ;;
     # lara run <user> <command>     # Run command in workspace
     run)
         cd laradock; docker-compose exec --user=$2 workspace bash -c "$3"
         ;;
-    # dir:check                     # Check if PWD is a dir and exit if not
+    # . lara dircheck               # Check if PWD is a dir and exit if not
     lara:dircheck)
         ! test -d laradock || ! test -f lara.db && echo -e "Is this your dir? Please set with '\e[32mlara setdir\e[0m'." && exit
         ;;
-    domain:newcheck)
-        test -z "$2" && echo -e "\e[31mNew domain name required\e[0m" && exit
-        [[ "$2" == *" "* ]] && echo -e '\e[31mNo space allowed\e[0m' && exit
-        test -z $(echo "$2" | grep ".\..") && echo -e '\e[31mDomain not fit format\e[0m' && exit
-        ! test -z $($0 domain:fullmatch $2) && echo -e '\e[31mDomain already exist\e[0m' && exit
-        ;;
+    # lara new <domain> [-dg]       # New a laravel project and switch on it
     new)
         # [[ $3 == '-f' ]] && echo 'force' && rm -rf $2
         . $0 lara:dircheck
         . $0 domain:newcheck $2
         echo -e "\e[33mWait several minutes to generate the project\e[0m"
         $0 run laradock "composer create-project laravel/laravel $2 --prefer-dist;" || exit
-        $0 db:mix HEAD $2
+        $0 switch $2
         $0 init
         ;;
+    # lara domain:setconf <domain>  # Set conf in laradock with given domain
     domain:setconf)
         test -r laradock/nginx/sites/$2.conf || sed "s/server_name laravel.test/server_name $2/" laradock/nginx/sites/laravel.conf.example > laradock/nginx/sites/$2.conf
-        ! grep -q $2 /etc/hosts && echo -e "\e[32mRegist host, Password might needed.\e[0m" && sudo -- sh -c "echo '127.0.0.1       $domain' >> /etc/hosts"
+        ! grep -q $2 /etc/hosts && echo -e "\e[32mRegist host, Password might needed.\e[0m" && sudo -- sh -c "echo '127.0.0.1       $2' >> /etc/hosts"
         ;;
+    # lara init [-d]                # Initial a laravelproject after clone
     init)
         echo -e "\e[33mWait several minutes to download the require\e[0m"
         domain=$($0 db:where HEAD)
@@ -183,7 +187,7 @@ case "$1" in
         laravel/.env > tmp;
         mv tmp laravel/.env
 
-        $0 domain:setconf
+        $0 domain:setconf $domain
         ;;
     proj)
         "$0" up "$3"n
