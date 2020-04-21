@@ -73,6 +73,8 @@ case "$1" in
         git push 
         brew update
         lara version
+        cd test
+        ./test
         ;;
     # 
     # # ===== LARA ENVIRONMENT COMMAND ===== #
